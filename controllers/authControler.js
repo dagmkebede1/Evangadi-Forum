@@ -90,4 +90,44 @@ const signUp = (req, res) => {
   }
 };
 
-export default signUp;
+const signIn = (req, res) => {
+  const { email, password } = req.body;
+
+  // checking for the presence of every input fields.
+  if (!email || !password) {
+    return res.status(StatusCode.NOT_FOUND).json({
+      status: "failed",
+      message: "Please provide the required Fields",
+    });
+  }
+  let query = `SELECT firstName, lastName, email, password FROM Users WHERE email='${email}'`;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(`ERROR: ${err.message}`);
+    } else {
+      if (!results[0] || !bcrypt.compareSync(password, results[0].password)) {
+        res.status(StatusCode.BAD_REQUEST).json({
+          status: "failed",
+          message: "Wrong Credentials, email or password is Incorrect !",
+        });
+      } else {
+        let token = signToken(email);
+
+        const cookieOptions = {
+          expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+          //this will be true in the hosting and productions
+          secure: false,
+          httpOnly: true,
+        };
+        res.cookie("token", token, cookieOptions);
+
+        res.status(StatusCode.OK).json({
+          status: "success",
+          token: token,
+        });
+      }
+    }
+  });
+};
+
+export { signUp, signIn };

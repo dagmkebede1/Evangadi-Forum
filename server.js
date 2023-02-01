@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(authRouter);
+app.use("/api/v1", authRouter);
 
 const runAPP = () => {
   import("./config/dbConfig.js");
