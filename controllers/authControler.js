@@ -130,4 +130,40 @@ const signIn = (req, res) => {
   });
 };
 
-export { signUp, signIn };
+// user ---> post question/   user login/un
+const protect = (req, res, next) => {
+  let token = req.cookies.token;
+
+  let userEmail = jwt.decode(token, process.env.SECRET_JWT);
+  if (!userEmail) {
+    return res.status(StatusCode.BAD_REQUEST).json({
+      status: "failed",
+      message: "You are not logged In!",
+    });
+  } else {
+    let email = userEmail.email;
+
+    db.query(
+      `SELECT firstName, lastName, email FROM Users WHERE email='${email}'`,
+      (err, results) => {
+        if (err) {
+          res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+            message: "Something went wrong !",
+          });
+        } else {
+          req.user = results[0];
+
+          next();
+          // res.status(StatusCode.OK).json({
+          //   status: "success",
+          //   user: results[0],
+          // });
+        }
+      }
+    );
+  }
+  // console.log(token);
+  // res.send(userEmail);
+};
+
+export { signUp, signIn, protect };
